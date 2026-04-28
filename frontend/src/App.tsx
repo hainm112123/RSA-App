@@ -8,11 +8,9 @@ function App() {
   return (
     <div className="app-container">
       <header className="panel" style={{ textAlign: 'center', marginBottom: '2rem' }}>
-        <span className="badge">Python Backend + Custom RSA Core</span>
-        <h1>RSA Learning Lab</h1>
+        <h1>RSA Cryptography</h1>
         <p>
-          Learn and present RSA cryptography by experimenting directly, or by simulating a secure communication flow.
-          Now with up to 8192-bit key support and number-based key visualization.
+          Learn and present RSA cryptography by experimenting directly, or by simulating a secure communication flow with up to 8192-bit key support and number-based key visualization.
         </p>
       </header>
 

@@ -5,6 +5,7 @@ const BIT_OPTIONS = [1024, 1536, 2048, 3072, 4096, 8192];
 
 export default function KeyLab() {
   const [bits, setBits] = useState(2048);
+  const [eType, setEType] = useState('standard');
   const [loadingKeys, setLoadingKeys] = useState(false);
   const [keyResult, setKeyResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
@@ -40,7 +41,7 @@ export default function KeyLab() {
       const res = await fetch(`${API_BASE}/generate-keys`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bits })
+        body: JSON.stringify({ bits, e_type: eType })
       });
       const data = await res.json();
       if (data.success) {
@@ -108,13 +109,22 @@ export default function KeyLab() {
           <p>Generate keys using Miller-Rabin primality testing. You can create keys up to 8192 bits.</p>
           
           <form onSubmit={generateKeys}>
-            <div className="input-group">
-              <label>Key size</label>
-              <select value={bits} onChange={e => setBits(Number(e.target.value))} disabled={loadingKeys}>
-                {BIT_OPTIONS.map(b => (
-                  <option key={b} value={b}>{b} bits</option>
-                ))}
-              </select>
+            <div className="grid grid-cols-2" style={{ gap: '1rem', marginBottom: '1rem' }}>
+              <div className="input-group" style={{ marginBottom: 0 }}>
+                <label>Key size</label>
+                <select value={bits} onChange={e => setBits(Number(e.target.value))} disabled={loadingKeys}>
+                  {BIT_OPTIONS.map(b => (
+                    <option key={b} value={b}>{b} bits</option>
+                  ))}
+                </select>
+              </div>
+              <div className="input-group" style={{ marginBottom: 0 }}>
+                <label>Public Exponent (e)</label>
+                <select value={eType} onChange={e => setEType(e.target.value)} disabled={loadingKeys}>
+                  <option value="standard">Standard (65537)</option>
+                  <option value="random">Random Large</option>
+                </select>
+              </div>
             </div>
             <button className="btn" type="submit" disabled={loadingKeys}>
               {loadingKeys ? <><span className="loader"></span> Generating...</> : 'Generate keys'}
@@ -123,7 +133,9 @@ export default function KeyLab() {
 
           {keyResult && !loadingKeys && (
             <div style={{ marginTop: '1.5rem' }}>
-              <div className="status ok">Generation completed in {keyResult.elapsed.toFixed(3)}s.</div>
+              <div className="status ok">
+                {keyResult.pooled ? 'Key retrieved instantly from background pool.' : `Generation completed in ${keyResult.elapsed.toFixed(3)}s.`}
+              </div>
               
               <div className="input-group">
                 <label>Public Key (Number - Modulus n)</label>
@@ -131,7 +143,7 @@ export default function KeyLab() {
               </div>
               <div className="input-group">
                 <label>Public Key Exponent (e)</label>
-                <input type="text" readOnly value={keyResult.public_key_e} />
+                <textarea readOnly value={keyResult.public_key_e} style={{ height: '80px' }}></textarea>
               </div>
               <div className="input-group">
                 <label>Private Key Exponent (d)</label>

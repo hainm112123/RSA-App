@@ -19,6 +19,7 @@ from .crypto import (
     sign_bytes,
     verify_signature,
 )
+from .crypto.key_pool import key_pool
 
 
 DEFAULT_BITS = 2048
@@ -43,16 +44,33 @@ def _timed_call(action, *args, **kwargs) -> Tuple[Any, float]:
     return result, elapsed
 
 
+def _get_keypair(bits: int, e_type: str = "standard") -> Tuple[Tuple[PublicKey, PrivateKey], float, bool]:
+    """Helper to get a keypair from pool or generate it."""
+    pooled = key_pool.get_key(bits, e_type)
+    if pooled:
+        # Reconstruct objects for internal logic if needed
+        pub = load_public_key_pem(pooled["public_key_pem"])
+        priv = load_private_key_pem(pooled["private_key_pem"])
+        return (pub, priv), 0.0, True
+    
+    e = 65537 if e_type == "standard" else None
+    (pub, priv), elapsed = _timed_call(generate_keypair, bits, e=e)
+    return (pub, priv), elapsed, False
+
+
 def register_routes(app: Flask) -> None:
     @app.post("/api/generate-keys")
     def generate_keys():
         data = request.get_json() or {}
         bits = int(data.get("bits", DEFAULT_BITS))
+        e_type = data.get("e_type", "standard")
         try:
-            (public_key, private_key), elapsed = _timed_call(generate_keypair, bits)
+            (public_key, private_key), elapsed, pooled = _get_keypair(bits, e_type)
             result = {
                 "bits": bits,
+                "e_type": e_type,
                 "elapsed": elapsed,
+                "pooled": pooled,
                 "public_key_pem": export_public_key_pem(public_key),
                 "private_key_pem": export_private_key_pem(private_key),
                 "public_key_n": str(public_key.n),
@@ -69,6 +87,7 @@ def register_routes(app: Flask) -> None:
 
     @app.post("/api/rsa-action")
     def rsa_action():
+        # ... (no changes needed to rsa_action as it doesn't generate keys)
         data = request.get_json() or {}
         mode = data.get("mode", "encrypt")
         display_mode = data.get("display_mode", "encoded")
@@ -168,8 +187,8 @@ def register_routes(app: Flask) -> None:
         receiver_bits = int(request.form.get("receiver_bits", DEFAULT_BITS))
 
         try:
-            (sender_public, sender_private), sender_elapsed = _timed_call(generate_keypair, sender_bits)
-            (receiver_public, receiver_private), receiver_elapsed = _timed_call(generate_keypair, receiver_bits)
+            (sender_public, sender_private), sender_elapsed, sender_pooled = _get_keypair(sender_bits)
+            (receiver_public, receiver_private), receiver_elapsed, receiver_pooled = _get_keypair(receiver_bits)
 
             package, sym_elapsed = _timed_call(encrypt_payload, data)
             encrypted_session_key, wrap_elapsed = _timed_call(encrypt_bytes, package["session_key"], receiver_public)
@@ -189,6 +208,8 @@ def register_routes(app: Flask) -> None:
                 "input_size": len(data),
                 "receiver_bits": receiver_bits,
                 "sender_bits": sender_bits,
+                "sender_pooled": sender_pooled,
+                "receiver_pooled": receiver_pooled,
                 "session_key_b64": _b64(package["session_key"]),
                 "encrypted_session_key_b64": _b64(encrypted_session_key),
                 "nonce_b64": _b64(package["nonce"]),

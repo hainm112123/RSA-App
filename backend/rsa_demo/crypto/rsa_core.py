@@ -4,10 +4,9 @@ import json
 import math
 import secrets
 from dataclasses import dataclass
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Optional
 
 
-PUBLIC_EXPONENT = 65537
 HASH_NAME = "sha256"
 HASH_SIZE = hashlib.new(HASH_NAME).digest_size
 
@@ -103,29 +102,37 @@ def load_private_key_pem(pem: str) -> PrivateKey:
     )
 
 
-def _egcd(a: int, b: int) -> Tuple[int, int, int]:
-    if b == 0:
-        return a, 1, 0
-    g, x1, y1 = _egcd(b, a % b)
-    return g, y1, x1 - (a // b) * y1
-
-
 def _mod_inverse(a: int, n: int) -> int:
-    g, x, _ = _egcd(a, n)
-    if g != 1:
+    try:
+        return pow(a, -1, n)
+    except ValueError:
         raise ValueError("Modular inverse does not exist.")
-    return x % n
 
 
-def _is_probable_prime(n: int, rounds: int = 40) -> bool:
+def _is_probable_prime(n: int, rounds: int = None) -> bool:
     if n < 2:
         return False
-    small_primes = (2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37)
+    # Expanded small prime list up to ~500 for faster pre-screening
+    small_primes = (
+        2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 
+        101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193, 197, 199,
+        211, 223, 227, 229, 233, 239, 241, 251, 257, 263, 269, 271, 277, 281, 283, 293, 307, 311, 313, 317, 331,
+        337, 347, 349, 353, 359, 367, 373, 379, 383, 389, 397, 401, 409, 419, 421, 431, 433, 439, 443, 449, 457,
+        461, 463, 467, 479, 487, 491, 499
+    )
     for prime in small_primes:
         if n == prime:
             return True
         if n % prime == 0:
             return False
+
+    if rounds is None:
+        # Adaptive rounds based on bit length for performance
+        bits = n.bit_length()
+        if bits >= 4096: rounds = 8
+        elif bits >= 2048: rounds = 12
+        elif bits >= 1024: rounds = 20
+        else: rounds = 40
 
     s = 0
     d = n - 1
@@ -148,14 +155,17 @@ def _is_probable_prime(n: int, rounds: int = 40) -> bool:
 
 
 def _generate_prime(bits: int) -> int:
-    while True:
-        candidate = secrets.randbits(bits)
-        candidate |= (1 << (bits - 1)) | 1
-        if _is_probable_prime(candidate):
-            return candidate
+    # Start with a random candidate
+    candidate = secrets.randbits(bits)
+    candidate |= (1 << (bits - 1)) | 1
+    
+    # Search iteratively (much faster than repeated random sampling)
+    while not _is_probable_prime(candidate):
+        candidate += 2
+    return candidate
 
 
-def generate_keypair(bits: int = 2048, e: int = PUBLIC_EXPONENT) -> Tuple[PublicKey, PrivateKey]:
+def generate_keypair(bits: int = 2048, e: Optional[int] = None) -> Tuple[PublicKey, PrivateKey]:
     if bits not in (1024, 1536, 2048, 3072, 4096, 8192):
         raise ValueError("Key size must be 1024, 1536, 2048, 3072, 4096, or 8192 bits.")
 
@@ -166,8 +176,28 @@ def generate_keypair(bits: int = 2048, e: int = PUBLIC_EXPONENT) -> Tuple[Public
         if p == q:
             continue
         phi = (p - 1) * (q - 1)
-        if math.gcd(e, phi) == 1:
-            break
+
+        if e is not None:
+            # Use the provided exponent (e.g. 65537)
+            if math.gcd(e, phi) == 1:
+                break
+            else:
+                # If the provided e doesn't work with these primes, try new primes
+                continue
+        else:
+            # Generate a large random public exponent e
+            found_e = False
+            for _ in range(100):
+                e_candidate = secrets.randbits(bits - 1)
+                e_candidate |= (1 << (bits - 2)) | 1
+                if 1 < e_candidate < phi and math.gcd(e_candidate, phi) == 1:
+                    e_val = e_candidate
+                    found_e = True
+                    break
+            
+            if found_e:
+                e = e_val
+                break
 
     n = p * q
     d = _mod_inverse(e, phi)
