@@ -1,48 +1,72 @@
 # RSA Learning Lab
 
-A Python web app for learning and presenting RSA cryptography through two main sections:
+A web app for learning and presenting RSA cryptography through two main sections:
 
 - RSA Lab: key generation, encryption, decryption, signing, and signature verification.
 - Secure Transfer Demo: a secure file transfer simulation based on hybrid encryption `RSA + AES`.
 
 ## Highlights
 
+- React + TypeScript + Vite frontend with modern UI.
 - Python backend with Flask.
 - Custom RSA core implementation without using an RSA library.
-- Supports `1024`, `1536`, `2048`, `3072`, and `4096` bit keys.
+- Supports `1024`, `1536`, `2048`, `3072`, `4096`, and `8192` bit keys.
 - Block-based RSA encryption with `OAEP + SHA-256`.
 - Digital signatures using `SHA-256` and a learning-oriented signature block.
 - Secure file transfer simulation:
-- RSA encrypts the session key.
-- AES-256 CTR encrypts the data.
-- HMAC-SHA256 verifies integrity.
+  - RSA encrypts the session key.
+  - AES-256 CTR encrypts the data.
+  - HMAC-SHA256 verifies integrity.
 
 ## Structure
 
-- `app.py`: Flask entry point.
-- `rsa_demo/routes.py`: web routes and request orchestration.
-- `rsa_demo/crypto/rsa_core.py`: RSA key generation, OAEP, encryption/decryption, signing/verification.
-- `rsa_demo/crypto/aes_ctr.py`: AES-256 CTR and HMAC for the hybrid simulation.
-- `rsa_demo/templates/`: HTML templates.
-- `rsa_demo/static/`: CSS.
-- `tests/test_crypto.py`: basic round-trip tests.
+- `backend/app.py`: Flask API entry point.
+- `backend/rsa_demo/routes.py`: JSON API web routes.
+- `backend/rsa_demo/crypto/rsa_core.py`: RSA key generation, OAEP, encryption/decryption, signing/verification.
+- `backend/rsa_demo/crypto/aes_ctr.py`: AES-256 CTR and HMAC for the hybrid simulation.
+- `frontend/`: React frontend application.
+- `backend/tests/`: basic round-trip tests.
 
 ## Run
 
-1. Create a Python virtual environment.
+### Backend
+
+1. Create a Python virtual environment and activate it.
 2. Install dependencies:
 
 ```bash
+cd backend
 pip install -r requirements.txt
 ```
 
-3. Run the app:
+3. Run the API server:
 
 ```bash
 python app.py
 ```
+The backend API will be available at `http://127.0.0.1:5000`.
 
-4. Open `http://127.0.0.1:5000` in your browser.
+### Frontend
+
+1. Open a new terminal and navigate to the frontend directory:
+
+```bash
+cd frontend
+```
+
+2. Install dependencies:
+
+```bash
+npm install
+```
+
+3. Run the development server:
+
+```bash
+npm run dev
+```
+
+4. Open the displayed URL (typically `http://localhost:5173`) in your browser.
 
 ## Notes
 

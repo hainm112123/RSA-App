@@ -156,8 +156,8 @@ def _generate_prime(bits: int) -> int:
 
 
 def generate_keypair(bits: int = 2048, e: int = PUBLIC_EXPONENT) -> Tuple[PublicKey, PrivateKey]:
-    if bits not in (1024, 1536, 2048, 3072, 4096):
-        raise ValueError("Key size must be 1024, 1536, 2048, 3072, or 4096 bits.")
+    if bits not in (1024, 1536, 2048, 3072, 4096, 8192):
+        raise ValueError("Key size must be 1024, 1536, 2048, 3072, 4096, or 8192 bits.")
 
     half = bits // 2
     while True:

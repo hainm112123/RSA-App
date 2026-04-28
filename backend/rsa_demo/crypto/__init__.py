@@ -1,5 +1,7 @@
 from .aes_ctr import decrypt_payload, encrypt_payload
 from .rsa_core import (
+    PublicKey,
+    PrivateKey,
     decrypt_bytes,
     encrypt_bytes,
     export_private_key_pem,
@@ -12,6 +14,8 @@ from .rsa_core import (
 )
 
 __all__ = [
+    "PublicKey",
+    "PrivateKey",
     "decrypt_bytes",
     "decrypt_payload",
     "encrypt_bytes",
