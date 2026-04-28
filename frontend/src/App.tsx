@@ -1,16 +1,16 @@
 import { useState } from 'react';
 import KeyLab from './components/KeyLab';
-import HybridDemo from './components/HybridDemo';
+import InteractiveDemos from './components/InteractiveDemos';
 
 function App() {
-  const [activeTab, setActiveTab] = useState<'lab' | 'hybrid'>('lab');
+  const [activeTab, setActiveTab] = useState<'lab' | 'interactive'>('lab');
 
   return (
     <div className="app-container">
       <header className="panel" style={{ textAlign: 'center', marginBottom: '2rem' }}>
-        <h1>RSA Cryptography</h1>
+        <h1>RSA Learning Lab</h1>
         <p>
-          Learn and present RSA cryptography by experimenting directly, or by simulating a secure communication flow with up to 8192-bit key support and number-based key visualization.
+          Master the fundamentals of RSA through direct experimentation and interactive side-by-side simulations.
         </p>
       </header>
 
@@ -22,15 +22,15 @@ function App() {
           RSA Lab
         </div>
         <div 
-          className={`tab ${activeTab === 'hybrid' ? 'active' : ''}`}
-          onClick={() => setActiveTab('hybrid')}
+          className={`tab ${activeTab === 'interactive' ? 'active' : ''}`}
+          onClick={() => setActiveTab('interactive')}
         >
-          Secure Transfer Demo
+          Interactive Demos
         </div>
       </div>
 
       <main>
-        {activeTab === 'lab' ? <KeyLab /> : <HybridDemo />}
+        {activeTab === 'lab' ? <KeyLab /> : <InteractiveDemos />}
       </main>
     </div>
   );

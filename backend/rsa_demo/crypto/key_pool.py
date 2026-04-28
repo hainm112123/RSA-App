@@ -31,31 +31,38 @@ class KeyPool:
         self.lock = threading.Lock()
         self.running = False
         self.worker_thread: Optional[threading.Thread] = None
-        
-        # Load any existing keys from disk on startup
-        self._load_from_disk()
+        self._needs_save = False
 
     def _load_from_disk(self):
+        """Loads keys from disk. Called by the worker thread to avoid blocking startup."""
         if os.path.exists(POOL_FILE):
             try:
                 with open(POOL_FILE, "r") as f:
                     data = json.load(f)
-                    for key_id, keys in data.items():
-                        if key_id in self.pools:
-                            bits = int(key_id.split(":")[0])
-                            e_type = key_id.split(":")[1]
-                            max_size = self.pool_sizes[bits] if e_type == "standard" else 2
-                            self.pools[key_id] = keys[:max_size]
+                    with self.lock:
+                        for key_id, keys in data.items():
+                            if key_id in self.pools:
+                                bits = int(key_id.split(":")[0])
+                                e_type = key_id.split(":")[1]
+                                max_size = self.pool_sizes[bits] if e_type == "standard" else 2
+                                self.pools[key_id] = keys[:max_size]
             except Exception:
                 pass
 
     def _save_to_disk(self):
+        """Saves keys to disk atomically."""
         with self.lock:
-            data = {key_id: keys for key_id, keys in self.pools.items()}
+            if not self._needs_save:
+                return
+            data = {key_id: list(keys) for key_id, keys in self.pools.items()}
+            self._needs_save = False
         
         try:
-            with open(POOL_FILE, "w") as f:
+            # Atomic write: write to temp file then rename
+            temp_file = f"{POOL_FILE}.tmp"
+            with open(temp_file, "w") as f:
                 json.dump(data, f)
+            os.replace(temp_file, POOL_FILE)
         except Exception:
             pass
 
@@ -71,6 +78,9 @@ class KeyPool:
 
     def _worker(self):
         """Background thread that fills the pools."""
+        # 1. Load existing keys first (without blocking main thread)
+        self._load_from_disk()
+        
         while self.running:
             target = None
             
@@ -78,7 +88,6 @@ class KeyPool:
                 for key_id, keys in self.pools.items():
                     bits, e_type = key_id.split(":")
                     bits = int(bits)
-                    # For random large keys, we keep a smaller pool to save CPU/resources
                     max_size = self.pool_sizes[bits] if e_type == "standard" else 2
                     if len(keys) < max_size:
                         target = (bits, e_type)
@@ -102,6 +111,7 @@ class KeyPool:
                         "private_key_p": str(private_key.p),
                         "private_key_q": str(private_key.q),
                         "private_key_e": str(private_key.e),
+                        "pooled": True
                     }
                     
                     key_id = f"{bits}:{e_type}"
@@ -109,7 +119,9 @@ class KeyPool:
                         max_size = self.pool_sizes[bits] if e_type == "standard" else 2
                         if len(self.pools[key_id]) < max_size:
                             self.pools[key_id].append(key_data)
+                            self._needs_save = True
                     
+                    # Periodic save
                     self._save_to_disk()
                     
                 except Exception:
@@ -117,6 +129,8 @@ class KeyPool:
                 
                 time.sleep(0.5)
             else:
+                # All full, double check save and sleep
+                self._save_to_disk()
                 time.sleep(5)
 
     def get_key(self, bits: int, e_type: str = "standard") -> Optional[dict]:
@@ -124,6 +138,7 @@ class KeyPool:
         key_id = f"{bits}:{e_type}"
         with self.lock:
             if key_id in self.pools and self.pools[key_id]:
+                self._needs_save = True
                 return self.pools[key_id].pop(0)
         return None
 

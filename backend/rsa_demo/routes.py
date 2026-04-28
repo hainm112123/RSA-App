@@ -8,9 +8,7 @@ from .crypto import (
     PublicKey,
     PrivateKey,
     decrypt_bytes,
-    decrypt_payload,
     encrypt_bytes,
-    encrypt_payload,
     export_private_key_pem,
     export_public_key_pem,
     generate_keypair,
@@ -169,66 +167,6 @@ def register_routes(app: Flask) -> None:
                     result["signature_b64"] = _b64(signature)
             else:
                 raise ValueError("Invalid RSA action.")
-            return jsonify({"success": True, "data": result})
-        except Exception as exc:
-            return jsonify({"success": False, "error": str(exc)}), 400
-
-    @app.post("/api/hybrid-demo")
-    def hybrid_demo():
-        file = request.files.get("payload_file")
-        if file is None or file.filename == "":
-            return jsonify({"success": False, "error": "Please choose a file for the secure transfer simulation."}), 400
-
-        data = file.read()
-        if not data:
-            return jsonify({"success": False, "error": "The selected file is empty."}), 400
-
-        sender_bits = int(request.form.get("sender_bits", DEFAULT_BITS))
-        receiver_bits = int(request.form.get("receiver_bits", DEFAULT_BITS))
-
-        try:
-            (sender_public, sender_private), sender_elapsed, sender_pooled = _get_keypair(sender_bits)
-            (receiver_public, receiver_private), receiver_elapsed, receiver_pooled = _get_keypair(receiver_bits)
-
-            package, sym_elapsed = _timed_call(encrypt_payload, data)
-            encrypted_session_key, wrap_elapsed = _timed_call(encrypt_bytes, package["session_key"], receiver_public)
-            signature, sign_elapsed = _timed_call(sign_bytes, package["ciphertext"], sender_private)
-            unwrapped_key, unwrap_elapsed = _timed_call(decrypt_bytes, encrypted_session_key, receiver_private)
-            verified, verify_elapsed = _timed_call(verify_signature, package["ciphertext"], signature, sender_public)
-            restored_data, dec_elapsed = _timed_call(
-                decrypt_payload,
-                unwrapped_key,
-                package["nonce"],
-                package["ciphertext"],
-                package["tag"],
-            )
-
-            result = {
-                "filename": file.filename,
-                "input_size": len(data),
-                "receiver_bits": receiver_bits,
-                "sender_bits": sender_bits,
-                "sender_pooled": sender_pooled,
-                "receiver_pooled": receiver_pooled,
-                "session_key_b64": _b64(package["session_key"]),
-                "encrypted_session_key_b64": _b64(encrypted_session_key),
-                "nonce_b64": _b64(package["nonce"]),
-                "tag_b64": _b64(package["tag"]),
-                "ciphertext_preview_b64": _b64(package["ciphertext"][:96]),
-                "signature_b64": _b64(signature),
-                "verified": verified,
-                "restored_matches": restored_data == data,
-                "timings": {
-                    "sender_keygen": sender_elapsed,
-                    "receiver_keygen": receiver_elapsed,
-                    "hybrid_encrypt": sym_elapsed,
-                    "rsa_wrap": wrap_elapsed,
-                    "sign": sign_elapsed,
-                    "rsa_unwrap": unwrap_elapsed,
-                    "verify": verify_elapsed,
-                    "hybrid_decrypt": dec_elapsed,
-                },
-            }
             return jsonify({"success": True, "data": result})
         except Exception as exc:
             return jsonify({"success": False, "error": str(exc)}), 400
