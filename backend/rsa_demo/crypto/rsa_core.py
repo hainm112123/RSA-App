@@ -303,11 +303,6 @@ def _pss_encode(message: bytes, k: int, hash_name: str = HASH_NAME) -> bytes:
     db_mask = _mgf1(h_final, k - hlen - 1, hash_name)
     masked_db = _xor_bytes(db, db_mask)
     
-    # Clear bits for emBits
-    mask = (0xFF >> (8 * k - (8 * k - 1))) # In our case k is bytes, so we just clear first byte if needed
-    # Actually for byte-aligned k, we just ensure the first byte doesn't overflow the modulus
-    # But since we use k = byte_size, the most significant bit must be handled.
-    # In simple implementations we just clear the top bit of the first byte.
     masked_db = bytes([masked_db[0] & 0x7f]) + masked_db[1:]
     
     return masked_db + h_final + b"\xbc"
