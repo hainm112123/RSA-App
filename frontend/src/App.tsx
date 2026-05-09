@@ -8,13 +8,10 @@ function App() {
   return (
     <div className="app-container">
       <header className="panel" style={{ textAlign: 'center', marginBottom: '2rem' }}>
-        <h1>RSA Learning Lab</h1>
-        <p>
-          Master the fundamentals of RSA through direct experimentation and interactive side-by-side simulations.
-        </p>
+        <h1>RSA Cryptography</h1>
       </header>
 
-      <div className="tabs">
+      {/* <div className="tabs">
         <div 
           className={`tab ${activeTab === 'lab' ? 'active' : ''}`}
           onClick={() => setActiveTab('lab')}
@@ -27,7 +24,7 @@ function App() {
         >
           Interactive Demos
         </div>
-      </div>
+      </div> */}
 
       <main>
         {activeTab === 'lab' ? <KeyLab /> : <InteractiveDemos />}

@@ -25,13 +25,15 @@ To prevent mathematical attacks and ensure that the same message produces differ
 4. **Numerical Conversion**: The resulting byte array is converted into a large integer using `int.from_bytes(..., 'big')`.
 5. **Modular Exponentiation**: $c = m^e \pmod n$.
 
-## 3. Digital Signatures
-The lab uses a scheme inspired by PKCS#1 v1.5 for pedagogical clarity.
+## 3. Digital Signatures (PSS)
+The lab uses **Probabilistic Signature Scheme (PSS)**, which is the modern standard for RSA signatures.
 
-1. **Hashing**: The message is hashed using **SHA-256**.
-2. **Padding**: The hash is prepended with a specific padding string (`RSA-LAB-SHA256|`) and a series of `0xFF` bytes to fill the RSA block size.
-3. **Signing**: The padded block is raised to the power of the private exponent: $s = m^d \pmod n$.
-4. **Verification**: The verifier raises the signature to the public exponent $e$ and checks if the resulting block matches the expected hash and padding structure.
+1. **Hashing**: The message is hashed using **SHA-256** to produce $mHash$.
+2. **Salt**: A random **salt** (equal to the hash size) is generated, making the signature probabilistic (different every time).
+3. **MGF1**: A mask is generated from the hash $H$ (which is a hash of the original $mHash$ combined with the salt) and applied to the data block.
+4. **Structure**: The resulting block ($EM$) contains the masked salt, the hash $H$, and a trailer byte (`0xBC`).
+5. **Signing**: The encoded block is raised to the power of the private exponent: $s = m^d \pmod n$.
+6. **Verification**: The verifier uses the public key to recover the encoded block, extracts the salt using MGF1, and reconstructs $H$ to verify the signature's integrity and authenticity.
 
 ## 4. Implementation Details
 - **Arbitrary Precision**: The implementation leverages Python's native support for arbitrarily large integers.

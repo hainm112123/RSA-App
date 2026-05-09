@@ -93,9 +93,11 @@ export default function KeyLab() {
         setActionResult(data.data);
       } else {
         setError(data.error);
+        setActionResult(null); // Clear result on error
       }
     } catch (err: any) {
       setError(err.message);
+      setActionResult(null);
     } finally {
       setActionLoading(false);
     }
@@ -106,7 +108,6 @@ export default function KeyLab() {
       <div className="stack">
         <article className="panel">
           <h2>1. Generate RSA Keys</h2>
-          <p>Generate keys using Miller-Rabin primality testing. You can create keys up to 8192 bits.</p>
           
           <form onSubmit={generateKeys}>
             <div className="grid grid-cols-2" style={{ gap: '1rem', marginBottom: '1rem' }}>
@@ -134,7 +135,7 @@ export default function KeyLab() {
           {keyResult && !loadingKeys && (
             <div style={{ marginTop: '1.5rem' }}>
               <div className="status ok">
-                {keyResult.pooled ? 'Key retrieved instantly from background pool.' : `Generation completed in ${keyResult.elapsed.toFixed(3)}s.`}
+                {`Key generation completed!`}
               </div>
               
               <div className="input-group">
@@ -161,14 +162,11 @@ export default function KeyLab() {
             </div>
           )}
         </article>
-
-        {error && <div className="status error">{error}</div>}
       </div>
 
       <div>
         <article className="panel">
-          <h2>2. RSA Playground</h2>
-          <p>Choose an action to encrypt, decrypt, sign, or verify. Input data is UTF-8 text.</p>
+          <h2>2. RSA Simulation</h2>
           
           <form onSubmit={runAction}>
             <div className="grid grid-cols-2" style={{ gap: '1rem', marginBottom: '1rem' }}>
@@ -308,6 +306,8 @@ export default function KeyLab() {
                 />
               </div>
             )}
+
+            {error && <div className="status error" style={{ marginBottom: '1rem' }}>{error}</div>}
 
             <button className="btn" type="submit" disabled={actionLoading}>
               {actionLoading ? <><span className="loader"></span> Processing...</> : 'Run action'}

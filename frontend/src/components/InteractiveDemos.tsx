@@ -25,6 +25,7 @@ export default function InteractiveDemos() {
   const [isTampered, setIsTampered] = useState(false);
   const [loadingSign, setLoadingSign] = useState(false);
   const [loadingVerify, setLoadingVerify] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     initDemoKeys();
@@ -32,6 +33,7 @@ export default function InteractiveDemos() {
 
   const initDemoKeys = async () => {
     setLoadingKeys(true);
+    setError(null);
     try {
       const [resA, resB] = await Promise.all([
         fetch(`${API_BASE}/generate-keys`, { 
@@ -59,6 +61,7 @@ export default function InteractiveDemos() {
   const handleAliceEncrypt = async () => {
     if (!bobKey) return;
     setLoadingEncrypt(true);
+    setError(null);
     try {
       const res = await fetch(`${API_BASE}/rsa-action`, {
         method: 'POST',
@@ -74,14 +77,20 @@ export default function InteractiveDemos() {
       if (data.success) {
         setEncryptedMessage(data.data);
         setMessagingStep(1);
+      } else {
+        setError(data.error);
       }
-    } catch (e) { console.error(e); }
+    } catch (e: any) { 
+      setError(e.message);
+      console.error(e); 
+    }
     finally { setLoadingEncrypt(false); }
   };
 
   const handleBobDecrypt = async () => {
     if (!bobKey || !encryptedMessage) return;
     setLoadingDecrypt(true);
+    setError(null);
     try {
       const res = await fetch(`${API_BASE}/rsa-action`, {
         method: 'POST',
@@ -97,14 +106,22 @@ export default function InteractiveDemos() {
       if (data.success) {
         setBobDecrypted(data.data.plaintext);
         setMessagingStep(3);
+      } else {
+        setError(data.error);
+        setBobDecrypted(null);
       }
-    } catch (e) { console.error(e); }
+    } catch (e: any) { 
+      setError(e.message);
+      console.error(e); 
+      setBobDecrypted(null);
+    }
     finally { setLoadingDecrypt(false); }
   };
 
   const handleNotarySign = async () => {
     if (!aliceKey) return;
     setLoadingSign(true);
+    setError(null);
     try {
       const res = await fetch(`${API_BASE}/rsa-action`, {
         method: 'POST',
@@ -121,14 +138,20 @@ export default function InteractiveDemos() {
         setSignature(data.data);
         setVerifierResult(null);
         setIsTampered(false);
+      } else {
+        setError(data.error);
       }
-    } catch (e) { console.error(e); }
+    } catch (e: any) { 
+      setError(e.message);
+      console.error(e); 
+    }
     finally { setLoadingSign(false); }
   };
 
   const handleNotaryVerify = async () => {
     if (!aliceKey || !signature) return;
     setLoadingVerify(true);
+    setError(null);
     try {
       const res = await fetch(`${API_BASE}/rsa-action`, {
         method: 'POST',
@@ -144,8 +167,15 @@ export default function InteractiveDemos() {
       const data = await res.json();
       if (data.success) {
         setVerifierResult(data.data);
+      } else {
+        setError(data.error);
+        setVerifierResult(null);
       }
-    } catch (e) { console.error(e); }
+    } catch (e: any) { 
+      setError(e.message);
+      console.error(e); 
+      setVerifierResult(null);
+    }
     finally { setLoadingVerify(false); }
   };
 
@@ -203,6 +233,7 @@ export default function InteractiveDemos() {
         </article>
       ) : (
         <>
+          {error && <div className="status error" style={{ marginBottom: '1.5rem' }}>{error}</div>}
           {activeTab === 'messaging' && (
             <div className="grid grid-cols-2">
               <div className="stack">

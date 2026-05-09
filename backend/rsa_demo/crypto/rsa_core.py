@@ -285,16 +285,70 @@ def decrypt_bytes(ciphertext: bytes, private_key: PrivateKey) -> bytes:
     return bytes(decrypted)
 
 
-def sign_bytes(message: bytes, private_key: PrivateKey) -> bytes:
-    digest = hashlib.sha256(message).digest()
-    digest_info = b"RSA-LAB-SHA256|" + digest
-    k = private_key.byte_size
-    if len(digest_info) + 11 > k:
-        raise ValueError("Key is too short for signing.")
+def _pss_encode(message: bytes, k: int, hash_name: str = HASH_NAME) -> bytes:
+    h = hashlib.new(hash_name)
+    hlen = h.digest_size
+    m_hash = hashlib.new(hash_name, message).digest()
+    slen = hlen # salt length same as hash length
+    
+    if k < hlen + slen + 2:
+        raise ValueError("Key size too small for PSS.")
+    
+    salt = secrets.token_bytes(slen)
+    m_prime = b"\x00" * 8 + m_hash + salt
+    h_final = hashlib.new(hash_name, m_prime).digest()
+    
+    ps = b"\x00" * (k - slen - hlen - 2)
+    db = ps + b"\x01" + salt
+    db_mask = _mgf1(h_final, k - hlen - 1, hash_name)
+    masked_db = _xor_bytes(db, db_mask)
+    
+    # Clear bits for emBits
+    mask = (0xFF >> (8 * k - (8 * k - 1))) # In our case k is bytes, so we just clear first byte if needed
+    # Actually for byte-aligned k, we just ensure the first byte doesn't overflow the modulus
+    # But since we use k = byte_size, the most significant bit must be handled.
+    # In simple implementations we just clear the top bit of the first byte.
+    masked_db = bytes([masked_db[0] & 0x7f]) + masked_db[1:]
+    
+    return masked_db + h_final + b"\xbc"
 
-    padding = b"\xff" * (k - len(digest_info) - 3)
-    block = b"\x00\x01" + padding + b"\x00" + digest_info
-    sig_int = pow(int.from_bytes(block, "big"), private_key.d, private_key.n)
+
+def _pss_verify(message: bytes, em: bytes, k: int, hash_name: str = HASH_NAME) -> bool:
+    h = hashlib.new(hash_name)
+    hlen = h.digest_size
+    m_hash = hashlib.new(hash_name, message).digest()
+    slen = hlen
+    
+    if k < hlen + slen + 2 or em[-1] != 0xbc:
+        return False
+    
+    masked_db = em[:k - hlen - 1]
+    h_final = em[k - hlen - 1 : -1]
+    
+    if (em[0] & 0x80) != 0: # Check top bit
+        return False
+        
+    db_mask = _mgf1(h_final, k - hlen - 1, hash_name)
+    db = _xor_bytes(masked_db, db_mask)
+    db = bytes([db[0] & 0x7f]) + db[1:]
+    
+    # Verify PS
+    ps_len = k - hlen - slen - 2
+    for i in range(ps_len):
+        if db[i] != 0: return False
+    if db[ps_len] != 0x01: return False
+    
+    salt = db[-slen:]
+    m_prime = b"\x00" * 8 + m_hash + salt
+    h_check = hashlib.new(hash_name, m_prime).digest()
+    
+    return secrets.compare_digest(h_final, h_check)
+
+
+def sign_bytes(message: bytes, private_key: PrivateKey) -> bytes:
+    k = private_key.byte_size
+    padded = _pss_encode(message, k)
+    sig_int = pow(int.from_bytes(padded, "big"), private_key.d, private_key.n)
     return sig_int.to_bytes(k, "big")
 
 
@@ -304,14 +358,8 @@ def verify_signature(message: bytes, signature: bytes, public_key: PublicKey) ->
         return False
 
     sig_int = int.from_bytes(signature, "big")
-    block = pow(sig_int, public_key.e, public_key.n).to_bytes(k, "big")
-    if not block.startswith(b"\x00\x01"):
+    if sig_int >= public_key.n:
         return False
-    separator = block.find(b"\x00", 2)
-    if separator == -1:
-        return False
-    digest_info = block[separator + 1:]
-    if not digest_info.startswith(b"RSA-LAB-SHA256|"):
-        return False
-    expected = hashlib.sha256(message).digest()
-    return secrets.compare_digest(digest_info[len(b"RSA-LAB-SHA256|"):], expected)
+        
+    padded = pow(sig_int, public_key.e, public_key.n).to_bytes(k, "big")
+    return _pss_verify(message, padded, k)

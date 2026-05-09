@@ -12,11 +12,9 @@ A web app for learning and presenting RSA cryptography through two main sections
 - Custom RSA core implementation without using an RSA library.
 - Supports `1024`, `1536`, `2048`, `3072`, `4096`, and `8192` bit keys.
 - Block-based RSA encryption with `OAEP + SHA-256`.
-- Digital signatures using `SHA-256` and a learning-oriented signature block.
-- Secure file transfer simulation:
-  - RSA encrypts the session key.
-  - AES-256 CTR encrypts the data.
-  - HMAC-SHA256 verifies integrity.
+- Modern Digital Signatures using **`RSA-PSS`** (Probabilistic Signature Scheme).
+- Interactive pedagogical simulations for key workflows.
+- Performance-optimized backend with asynchronous key generation.
 
 ## Structure
 

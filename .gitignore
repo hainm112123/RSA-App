@@ -2,3 +2,7 @@ __pycache__
 node_modules
 venv
 .keys_pool.json
+report_en.tex
+report_vi.tex
+backend/scratch
+
