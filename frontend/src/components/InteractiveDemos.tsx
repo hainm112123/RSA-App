@@ -200,13 +200,13 @@ export default function InteractiveDemos() {
 
   return (
     <div className="stack">
-      <div className="flex" style={{ gap: '1rem', marginBottom: '2rem', background: 'rgba(255,255,255,0.05)', padding: '0.5rem', borderRadius: '12px', width: 'fit-content' }}>
+      <div className="flex" style={{ gap: '1rem', marginBottom: '2rem', background: 'rgba(251, 146, 60, 0.1)', padding: '0.5rem', borderRadius: '12px', width: 'fit-content' }}>
         <button 
           className="btn"
           style={{ 
             background: activeTab === 'messaging' ? 'var(--accent)' : 'transparent',
             color: activeTab === 'messaging' ? '#fff' : 'var(--text-secondary)',
-            boxShadow: activeTab === 'messaging' ? '0 4px 12px rgba(99, 102, 241, 0.3)' : 'none'
+            boxShadow: activeTab === 'messaging' ? '0 4px 12px rgba(234, 88, 12, 0.2)' : 'none'
           }}
           onClick={() => setActiveTab('messaging')}
         >
@@ -217,7 +217,7 @@ export default function InteractiveDemos() {
           style={{ 
             background: activeTab === 'notary' ? 'var(--accent)' : 'transparent',
             color: activeTab === 'notary' ? '#fff' : 'var(--text-secondary)',
-            boxShadow: activeTab === 'notary' ? '0 4px 12px rgba(99, 102, 241, 0.3)' : 'none'
+            boxShadow: activeTab === 'notary' ? '0 4px 12px rgba(234, 88, 12, 0.2)' : 'none'
           }}
           onClick={() => setActiveTab('notary')}
         >
@@ -240,7 +240,7 @@ export default function InteractiveDemos() {
                 <article className="panel" style={{ borderTop: '4px solid var(--accent)' }}>
                   <div className="flex-between" style={{ marginBottom: '1rem' }}>
                     <h3 style={{ margin: 0 }}>Alice's Terminal</h3>
-                    <span className="badge" style={{ margin: 0, background: 'rgba(99, 102, 241, 0.2)', color: '#a5b4fc' }}>Sender</span>
+                    <span className="badge" style={{ margin: 0, background: 'rgba(249, 115, 22, 0.1)', color: 'var(--accent)' }}>Sender</span>
                   </div>
                   <p style={{ fontSize: '0.9rem' }}>Alice encrypts her secret using <strong>Bob's Public Key</strong>.</p>
                   
@@ -282,7 +282,7 @@ export default function InteractiveDemos() {
                           fontSize: '0.75rem', 
                           fontFamily: 'monospace',
                           color: 'var(--accent)',
-                          background: 'rgba(0,0,0,0.3)'
+                          background: 'rgba(255,255,255,0.8)'
                         }}
                       />
                     </div>
@@ -290,7 +290,7 @@ export default function InteractiveDemos() {
                 </article>
 
                 {messagingStep === 2 && (
-                  <div className="panel" style={{ textAlign: 'center', background: 'rgba(99, 102, 241, 0.05)', border: '1px dashed var(--accent)', padding: '1rem' }}>
+                  <div className="panel" style={{ textAlign: 'center', background: 'rgba(249, 115, 22, 0.05)', border: '1px dashed var(--accent)', padding: '1rem' }}>
                     <div className="status" style={{ margin: 0, padding: 0, color: 'var(--accent)' }}>
                       📡 Ciphertext is currently traveling across the insecure internet...
                     </div>
@@ -302,7 +302,7 @@ export default function InteractiveDemos() {
                 <article className="panel" style={{ borderTop: '4px solid var(--success)' }}>
                   <div className="flex-between" style={{ marginBottom: '1rem' }}>
                     <h3 style={{ margin: 0 }}>Bob's Terminal</h3>
-                    <span className="badge" style={{ margin: 0, background: 'rgba(16, 185, 129, 0.2)', color: '#6ee7b7' }}>Receiver</span>
+                    <span className="badge" style={{ margin: 0, background: 'rgba(22, 163, 74, 0.1)', color: 'var(--success)' }}>Receiver</span>
                   </div>
                   <p style={{ fontSize: '0.9rem' }}>Bob receives the scrambled data. Only his <strong>Private Key</strong> can decrypt it.</p>
                   
@@ -314,7 +314,7 @@ export default function InteractiveDemos() {
                       style={{ 
                         height: '100px', 
                         opacity: messagingStep >= 2 ? 1 : 0.4,
-                        background: messagingStep >= 2 ? 'rgba(0,0,0,0.3)' : 'rgba(15, 23, 42, 0.8)'
+                        background: messagingStep >= 2 ? 'rgba(255,255,255,0.8)' : 'rgba(255, 255, 255, 0.4)'
                       }}
                     />
                   </div>
@@ -337,7 +337,7 @@ export default function InteractiveDemos() {
                   )}
 
                   {messagingStep === 3 && (
-                    <button className="btn btn-outline" onClick={resetMessaging} style={{ marginTop: '1rem', width: '100%', border: '1px solid rgba(255,255,255,0.2)' }}>
+                    <button className="btn btn-outline" onClick={resetMessaging} style={{ marginTop: '1rem', width: '100%', border: '1px solid var(--panel-border)' }}>
                       Clear & Reset Simulation
                     </button>
                   )}
@@ -351,7 +351,7 @@ export default function InteractiveDemos() {
               <article className="panel" style={{ borderTop: '4px solid var(--accent)' }}>
                 <div className="flex-between" style={{ marginBottom: '1rem' }}>
                   <h3 style={{ margin: 0 }}>Document Source</h3>
-                  <span className="badge" style={{ margin: 0, background: 'rgba(99, 102, 241, 0.2)', color: '#a5b4fc' }}>Alice (Signer)</span>
+                  <span className="badge" style={{ margin: 0, background: 'rgba(249, 115, 22, 0.1)', color: 'var(--accent)' }}>Alice (Signer)</span>
                 </div>
                 <p style={{ fontSize: '0.9rem' }}>Alice signs the hash of this document using her <strong>Private Key</strong>.</p>
                 
@@ -394,7 +394,7 @@ export default function InteractiveDemos() {
                         fontSize: '0.7rem', 
                         fontFamily: 'monospace',
                         opacity: 0.8,
-                        background: 'rgba(0,0,0,0.3)'
+                        background: 'rgba(255,255,255,0.8)'
                       }}
                     />
                   </div>
@@ -404,7 +404,7 @@ export default function InteractiveDemos() {
               <article className="panel" style={{ borderTop: '4px solid var(--success)' }}>
                 <div className="flex-between" style={{ marginBottom: '1rem' }}>
                   <h3 style={{ margin: 0 }}>Verifier Terminal</h3>
-                  <span className="badge" style={{ margin: 0, background: 'rgba(16, 185, 129, 0.2)', color: '#6ee7b7' }}>Public Access</span>
+                  <span className="badge" style={{ margin: 0, background: 'rgba(22, 163, 74, 0.1)', color: 'var(--success)' }}>Public Access</span>
                 </div>
                 <p style={{ fontSize: '0.9rem' }}>Anyone can use Alice's <strong>Public Key</strong> to verify the document's integrity.</p>
                 
@@ -412,12 +412,12 @@ export default function InteractiveDemos() {
                   <label>Document to Verify</label>
                   <div style={{ 
                     padding: '1.25rem', 
-                    background: 'rgba(255,255,255,0.03)', 
+                    background: 'rgba(255,255,255,0.8)', 
                     borderRadius: '8px', 
                     fontSize: '0.9rem',
                     lineHeight: 1.6,
-                    border: isTampered ? '1px solid rgba(239, 68, 68, 0.4)' : '1px solid rgba(255,255,255,0.05)',
-                    color: isTampered ? '#fca5a5' : 'inherit'
+                    border: isTampered ? '1px solid rgba(239, 68, 68, 0.4)' : '1px solid var(--panel-border)',
+                    color: isTampered ? '#991b1b' : 'inherit'
                   }}>
                     {notaryDoc}
                     {isTampered && <div style={{ fontSize: '0.7rem', color: 'var(--error)', marginTop: '0.5rem', fontWeight: 700 }}>⚠️ CONTENT MODIFIED AFTER SIGNING</div>}
@@ -451,7 +451,7 @@ export default function InteractiveDemos() {
                 )}
 
                 {signature && (
-                  <button className="btn btn-outline" onClick={resetNotary} style={{ marginTop: '1rem', width: '100%', border: '1px solid rgba(255,255,255,0.1)' }}>
+                  <button className="btn btn-outline" onClick={resetNotary} style={{ marginTop: '1rem', width: '100%', border: '1px solid var(--panel-border)' }}>
                     Reset Document
                   </button>
                 )}

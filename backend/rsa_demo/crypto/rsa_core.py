@@ -149,8 +149,8 @@ def _is_probable_prime(n: int, rounds: int = None) -> bool:
             x = pow(x, 2, n)
             if x == n - 1:
                 break
-        else:
-            return False
+            else:
+                return False
     return True
 
 
