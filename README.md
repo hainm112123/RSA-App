@@ -16,15 +16,6 @@ A web app for learning and presenting RSA cryptography through two main sections
 - Interactive pedagogical simulations for key workflows.
 - Performance-optimized backend with asynchronous key generation.
 
-## Structure
-
-- `backend/app.py`: Flask API entry point.
-- `backend/rsa_demo/routes.py`: JSON API web routes.
-- `backend/rsa_demo/crypto/rsa_core.py`: RSA key generation, OAEP, encryption/decryption, signing/verification.
-- `backend/rsa_demo/crypto/aes_ctr.py`: AES-256 CTR and HMAC for the hybrid simulation.
-- `frontend/`: React frontend application.
-- `backend/tests/`: basic round-trip tests.
-
 ## Run
 
 ### Backend
