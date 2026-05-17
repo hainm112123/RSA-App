@@ -1,4 +1,4 @@
-# RSA Learning Lab
+# RSA Lab
 
 A web app for learning and presenting RSA cryptography through two main sections:
 
@@ -65,9 +65,3 @@ npm run dev
 ```
 
 4. Open the displayed URL (typically `http://localhost:5173`) in your browser.
-
-## Notes
-
-- This application is intended for demos and learning, not for production security use.
-- RSA was reimplemented to make the algorithm easier to study, explain, and present.
-- Real production systems typically rely on audited cryptographic libraries and standardized protocols.
